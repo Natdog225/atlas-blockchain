@@ -16,17 +16,20 @@ EC_KEY *ec_load(char const *folder)
 	if (!folder)
 		return (NULL);
 
+	/* Construct the path to the private key file */
 	sprintf(path, "%s/key.pem", folder);
+
 	fp = fopen(path, "r");
 	if (!fp)
 		return (NULL);
 
+	/* Read the private key, which includes public key data */
 	if (!PEM_read_ECPrivateKey(fp, &key, NULL, NULL))
 	{
 		fclose(fp);
 		return (NULL);
 	}
-	fclose(fp);
 
+	fclose(fp);
 	return (key);
 }

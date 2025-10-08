@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/nathan/Repositories/atlas-blockchain/atlas-blockchain/crypto",
-      "program": "/Users/nathan/Repositories/atlas-blockchain/atlas-blockchain/crypto/build/Debug/outDebug"
+      "cwd": "/Users/nathan/Repositories/atlas-blockchain/atlas-blockchain/blockchain/v0.1",
+      "program": "/Users/nathan/Repositories/atlas-blockchain/atlas-blockchain/blockchain/v0.1/build/Debug/outDebug"
     }
   ]
 }

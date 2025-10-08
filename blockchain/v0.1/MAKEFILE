@@ -1,0 +1,41 @@
+CC = gcc
+CFLAGS = -Wall -Wextra -Werror -pedantic -Wno-deprecated-declarations -I. -I../../crypto
+LDFLAGS = -L../../crypto -lhblk_crypto -lllist -lssl -lcrypto
+
+# Source files for the blockchain library
+SRC = blockchain_create.c block_create.c block_destroy.c blockchain_destroy.c \
+      block_hash.c blockchain_serialize.c blockchain_deserialize.c block_is_valid.c
+
+# Object files
+OBJ = $(SRC:.c=.o)
+
+# Library name
+NAME = libhblk_blockchain_v0.1.a
+
+# Default target
+all: $(NAME)
+
+# Rule to build the static library
+$(NAME): $(OBJ)
+	ar -rcs $(NAME) $(OBJ)
+
+# Rule to build a test executable
+# Example usage: make test/blockchain_create-main
+test/%-main: test/%-main.c $(NAME)
+	$(CC) $(CFLAGS) $< $(provided_files) -o $@ -L. -lhblk_blockchain_v0.1 $(LDFLAGS)
+
+# Rule to compile .c files to .o files
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean up build artifacts
+clean:
+	rm -f $(OBJ)
+
+# Full clean, including the library and test executables
+fclean: clean
+	rm -f $(NAME) test/*-main
+
+re: fclean all
+
+.PHONY: all clean fclean re

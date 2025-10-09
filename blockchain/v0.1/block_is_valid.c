@@ -24,7 +24,7 @@ static const block_t GENESIS_BLOCK = {
 /**
  * block_is_valid - Verifies that a block is valid.
  * @block:      Pointer to the block to check.
- * @prev_block: Pointer to the previous block in the chain, or NULL for genesis.
+ * @prev_block: Pointer to the previous block in the chain, or NULL
  *
  * Return: 0 if the block is valid, otherwise -1.
  */

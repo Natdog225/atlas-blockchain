@@ -43,7 +43,6 @@ int block_is_valid(block_t const *block, block_t const *prev_block)
 			return (-1);
 		return (0);
 	}
-
 	if (!prev_block ||
 		block->info.index != prev_block->info.index + 1 ||
 		!block_hash(prev_block, hash_buf) ||

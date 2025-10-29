@@ -1,11 +1,12 @@
 #ifndef BLOCKCHAIN_H
 #define BLOCKCHAIN_H
+#define BLOCK_DATA_MAX_LEN 1024
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <llist.h>					  /* For llist_t */
-#include "../../crypto/hblk_crypto.h" /* For SHA256_DIGEST_LENGTH */
+#include <llist.h>
+#include "../../crypto/hblk_crypto.h"
 
 /* MACRO for Genesis Block data length */
 #define BLOCKCHAIN_DATA_MAX 1024

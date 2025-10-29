@@ -22,7 +22,8 @@ uint32_t blockchain_difficulty(blockchain_t const *blockchain)
 
 	latest_block = llist_get_node_at(blockchain->chain, size - 1);
 	if (!latest_block)
-		return (0);
+		return (0); /* Should not happen if size > 0 */
+
 	/* Adjust difficulty only at specified intervals, not for Genesis */
 	if (latest_block->info.index == 0 ||
 		latest_block->info.index % DIFFICULTY_ADJUSTMENT_INTERVAL != 0)
@@ -31,10 +32,11 @@ uint32_t blockchain_difficulty(blockchain_t const *blockchain)
 	}
 
 	/* Get the block at the start of this adjustment period */
-	/* 'size' is latest_block->info.index + 1 */
+	/* FIX: llist_get_node_at returns the data pointer directly */
 	adjustment_block = llist_get_node_at(blockchain->chain,
-										 size - DIFFICULTY_ADJUSTMENT_INTERVAL)
-						   ->data;
+										 size - DIFFICULTY_ADJUSTMENT_INTERVAL);
+	if (!adjustment_block)
+		return (0); /* Should not happen */
 
 	expected_time = (uint64_t)DIFFICULTY_ADJUSTMENT_INTERVAL *
 					(uint64_t)BLOCK_GENERATION_INTERVAL;
@@ -50,7 +52,6 @@ uint32_t blockchain_difficulty(blockchain_t const *blockchain)
 	else if (actual_time > (expected_time * 2))
 	{
 		/* Generated blocks too slow, decrease difficulty */
-		/* Prevent underflow */
 		if (latest_block->info.difficulty > 0)
 			return (latest_block->info.difficulty - 1);
 		return (0); /* Already at minimum */

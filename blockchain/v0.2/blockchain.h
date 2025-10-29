@@ -1,6 +1,8 @@
 #ifndef BLOCKCHAIN_H
 #define BLOCKCHAIN_H
 #define BLOCK_DATA_MAX_LEN 1024
+#define BLOCK_GENERATION_INTERVAL 1
+#define DIFFICULTY_ADJUSTMENT_INTERVAL 5
 
 #include <stdint.h>
 #include <stdlib.h>

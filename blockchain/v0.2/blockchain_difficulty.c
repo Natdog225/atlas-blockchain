@@ -20,8 +20,9 @@ uint32_t blockchain_difficulty(blockchain_t const *blockchain)
 	if (size == 0)
 		return (0);
 
-	latest_block = llist_get_node_at(blockchain->chain, size - 1)->data;
-
+	latest_block = llist_get_node_at(blockchain->chain, size - 1);
+	if (!latest_block)
+		return (0);
 	/* Adjust difficulty only at specified intervals, not for Genesis */
 	if (latest_block->info.index == 0 ||
 		latest_block->info.index % DIFFICULTY_ADJUSTMENT_INTERVAL != 0)

@@ -11,7 +11,7 @@
  * Return: 1 if the difficulty is respected, or 0 otherwise
  */
 int hash_matches_difficulty(uint8_t const hash[SHA256_DIGEST_LENGTH],
-                            uint32_t difficulty)
+							uint32_t difficulty)
 {
 	uint32_t i;
 	uint32_t full_bytes = difficulty / 8;

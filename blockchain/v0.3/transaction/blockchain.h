@@ -67,6 +67,32 @@ typedef struct blockchain_t
 	llist_t *chain;
 } blockchain_t;
 
+/* --- Task 0 --- */
+tx_out_t *tx_out_create(uint32_t amount, uint8_t const pub[EC_PUB_LEN]);
+
+/* --- Task 1 --- */
+unspent_tx_out_t *unspent_tx_out_create(
+	uint8_t block_hash[SHA256_DIGEST_LENGTH],
+	uint8_t tx_id[SHA256_DIGEST_LENGTH],
+	tx_out_t const *out
+);
+
+/* --- Task 2 --- */
+tx_in_t *tx_in_create(unspent_tx_out_t const *unspent);
+
+/* --- Task 3 --- */
+uint8_t *transaction_hash(
+	transaction_t const *transaction,
+	uint8_t hash_buf[SHA256_DIGEST_LENGTH]
+);
+
+/* --- Task 4 --- */
+sig_t *tx_in_sign(
+	tx_in_t *in,
+	uint8_t const tx_id[SHA256_DIGEST_LENGTH],
+	EC_KEY const *sender,
+	llist_t *all_unspent
+);
 
 /* Function Prototypes */
 blockchain_t *blockchain_create(void);

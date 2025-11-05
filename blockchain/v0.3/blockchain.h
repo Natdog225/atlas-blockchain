@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <llist.h>
 #include "../../crypto/hblk_crypto.h"
+#include "transaction.h"
 
 /* MACRO for Genesis Block data length */
 #define BLOCKCHAIN_DATA_MAX 1024

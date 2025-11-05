@@ -1,4 +1,5 @@
 #include "blockchain.h"
+#include <string.h>
 
 /**
  * tx_out_hash - Computes the hash of a transaction output

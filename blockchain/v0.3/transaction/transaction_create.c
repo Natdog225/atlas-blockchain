@@ -31,11 +31,26 @@ static uint32_t select_utxos(uint8_t const sender_pub[EC_PUB_LEN],
 				break;
 		}
 	}
-
 	if (total_in < amount)
 		return (0); /* Insufficient funds */
-
 	return (total_in);
+}
+
+/**
+ * cleanup_tx_create - Local helper to free memory on failure
+ * @tx: The transaction to free
+ * @selected_utxos: The temporary list of UTXOs to free
+ */
+static void cleanup_tx_create(transaction_t *tx, llist_t *selected_utxos)
+{
+	if (tx)
+	{
+		llist_destroy(tx->inputs, 1, free);
+		llist_destroy(tx->outputs, 1, free);
+		free(tx);
+	}
+	if (selected_utxos)
+		llist_destroy(selected_utxos, 0, NULL);
 }
 
 /**
@@ -68,16 +83,14 @@ transaction_t *transaction_create(EC_KEY const *sender, EC_KEY const *receiver,
 	tx->outputs = llist_create(MT_SUPPORT_FALSE);
 	selected_utxos = llist_create(MT_SUPPORT_FALSE);
 	if (!tx->inputs || !tx->outputs || !selected_utxos)
-	{ /* Cleanup on list creation failure */
-		transaction_destroy(tx);
-		llist_destroy(selected_utxos, 0, NULL);
+	{
+		cleanup_tx_create(tx, selected_utxos);
 		return (NULL);
 	}
 	total_in = select_utxos(sender_pub, amount, all_unspent, selected_utxos);
 	if (total_in == 0) /* Insufficient funds or error */
 	{
-		transaction_destroy(tx);
-		llist_destroy(selected_utxos, 0, NULL);
+		cleanup_tx_create(tx, selected_utxos);
 		return (NULL);
 	}
 	/* Create inputs from selected UTXOs */
@@ -87,18 +100,17 @@ transaction_t *transaction_create(EC_KEY const *sender, EC_KEY const *receiver,
 		in = tx_in_create(utxo);
 		if (!in || llist_add_node(tx->inputs, in, ADD_NODE_REAR) != 0)
 		{
-			transaction_destroy(tx);
-			llist_destroy(selected_utxos, 0, NULL);
+			cleanup_tx_create(tx, selected_utxos);
 			return (NULL);
 		}
 	}
-	llist_destroy(selected_utxos, 0, NULL);
+	llist_destroy(selected_utxos, 0, NULL); /* No longer need this list */
 
 	/* Create receiver output */
 	out_receiver = tx_out_create(amount, receiver_pub);
 	if (!out_receiver || llist_add_node(tx->outputs, out_receiver, ADD_NODE_REAR))
 	{
-		transaction_destroy(tx);
+		cleanup_tx_create(tx, NULL);
 		return (NULL);
 	}
 	/* Create change output if necessary */
@@ -107,14 +119,14 @@ transaction_t *transaction_create(EC_KEY const *sender, EC_KEY const *receiver,
 		out_change = tx_out_create(total_in - amount, sender_pub);
 		if (!out_change || llist_add_node(tx->outputs, out_change, ADD_NODE_REAR))
 		{
-			transaction_destroy(tx);
+			cleanup_tx_create(tx, NULL);
 			return (NULL);
 		}
 	}
 	/* Hash transaction */
 	if (!transaction_hash(tx, tx->id))
 	{
-		transaction_destroy(tx);
+		cleanup_tx_create(tx, NULL);
 		return (NULL);
 	}
 	/* Sign inputs */
@@ -123,7 +135,7 @@ transaction_t *transaction_create(EC_KEY const *sender, EC_KEY const *receiver,
 		in = llist_get_node_at(tx->inputs, i);
 		if (!tx_in_sign(in, tx->id, sender, all_unspent))
 		{
-			transaction_destroy(tx);
+			cleanup_tx_create(tx, NULL);
 			return (NULL);
 		}
 	}

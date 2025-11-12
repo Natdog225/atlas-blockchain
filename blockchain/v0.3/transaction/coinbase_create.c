@@ -55,7 +55,7 @@ transaction_t *coinbase_create(EC_KEY const *receiver, uint32_t block_index)
 
 	if (llist_add_node(tx->inputs, in, ADD_NODE_REAR) != 0)
 	{
-		local_tx_destroy(tx); /* This will free 'in' since it's in the list */
+		local_tx_destroy(tx); /* will free 'in' since it's in the list */
 		return (NULL);
 	}
 

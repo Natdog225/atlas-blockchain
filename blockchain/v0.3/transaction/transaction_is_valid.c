@@ -13,7 +13,6 @@ static int find_unspent_output(llist_node_t node, void *in)
 	unspent_tx_out_t *utxo = node;
 	tx_in_t *tx_in = in;
 
-	/* Compare the 3-tuple that uniquely identifies a UTXO */
 	if (memcmp(utxo->block_hash, tx_in->block_hash, SHA256_DIGEST_LENGTH) == 0 &&
 		memcmp(utxo->tx_id, tx_in->tx_id, SHA256_DIGEST_LENGTH) == 0 &&
 		memcmp(utxo->out.hash, tx_in->tx_out_hash, SHA256_DIGEST_LENGTH) == 0)
@@ -51,6 +50,10 @@ int transaction_is_valid(transaction_t const *transaction,
 
 	num_inputs = llist_size(transaction->inputs);
 	num_outputs = llist_size(transaction->outputs);
+
+	/* A valid (non-coinbase) transaction must have inputs */
+	if (num_inputs == 0)
+		return (0);
 
 	for (i = 0; i < num_inputs; i++)
 	{

@@ -2,6 +2,20 @@
 #include <string.h>
 
 /**
+ * local_tx_destroy - deallocates a transaction structure locally
+ * @transaction: points to the transaction to delete
+ */
+static void local_tx_destroy(transaction_t *transaction)
+{
+	if (!transaction)
+		return;
+	/* Free the lists and the data in them */
+	llist_destroy(transaction->inputs, 1, free);
+	llist_destroy(transaction->outputs, 1, free);
+	free(transaction);
+}
+
+/**
  * coinbase_create - creates a coinbase transaction
  * @receiver:    contains the public key of the miner
  * @block_index: is the index of the Block the coinbase will belong to
@@ -31,8 +45,8 @@ transaction_t *coinbase_create(EC_KEY const *receiver, uint32_t block_index)
 	tx->outputs = llist_create(MT_SUPPORT_FALSE);
 	if (!tx->inputs || !tx->outputs)
 	{
-		free(tx);
-		free(in);
+		local_tx_destroy(tx);
+		free(in); /* 'in' isn't in the list yet */
 		return (NULL);
 	}
 
@@ -41,20 +55,21 @@ transaction_t *coinbase_create(EC_KEY const *receiver, uint32_t block_index)
 
 	if (llist_add_node(tx->inputs, in, ADD_NODE_REAR) != 0)
 	{
-		transaction_destroy(tx); /* Will free in */
+		local_tx_destroy(tx); /* This will free 'in' since it's in the list */
 		return (NULL);
 	}
 
 	out = tx_out_create(COINBASE_AMOUNT, receiver_pub);
 	if (!out || llist_add_node(tx->outputs, out, ADD_NODE_REAR) != 0)
 	{
-		transaction_destroy(tx);
+		local_tx_destroy(tx);
 		return (NULL);
 	}
 
+	/* Hash the transaction and store in tx->id */
 	if (!transaction_hash(tx, tx->id))
 	{
-		transaction_destroy(tx);
+		local_tx_destroy(tx);
 		return (NULL);
 	}
 

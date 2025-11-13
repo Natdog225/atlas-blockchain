@@ -8,11 +8,7 @@ int coinbase_is_valid(transaction_t const *coinbase, uint32_t block_index)
 	tx_in_t *in;
 	tx_out_t *out;
 
-	if (!coinbase)
-		return (0);
-	
-	/* SEGFAULT FIX: Check for NULL lists */
-	if (!coinbase->inputs || !coinbase->outputs)
+	if (!coinbase || !coinbase->inputs || !coinbase->outputs)
 		return (0);
 
 	if (!transaction_hash(coinbase, hash_buf) ||
@@ -25,6 +21,9 @@ int coinbase_is_valid(transaction_t const *coinbase, uint32_t block_index)
 
 	in = llist_get_head(coinbase->inputs);
 	out = llist_get_head(coinbase->outputs);
+
+	if (!in || !out) /* SEGFAULT FIX */
+		return (0);
 
 	if (memcmp(in->tx_out_hash, &block_index, sizeof(block_index)) != 0)
 		return (0);

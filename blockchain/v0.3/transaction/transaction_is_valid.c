@@ -26,11 +26,7 @@ int transaction_is_valid(transaction_t const *transaction,
 	unspent_tx_out_t *utxo;
 	EC_KEY *temp_key;
 
-	if (!transaction || !all_unspent)
-		return (0);
-	
-	/* SEGFAULT FIX: Check for NULL lists */
-	if (!transaction->inputs || !transaction->outputs)
+	if (!transaction || !all_unspent || !transaction->inputs || !transaction->outputs)
 		return (0);
 
 	if (!transaction_hash(transaction, hash_buf) ||
@@ -46,6 +42,8 @@ int transaction_is_valid(transaction_t const *transaction,
 	for (i = 0; i < num_inputs; i++)
 	{
 		in = llist_get_node_at(transaction->inputs, i);
+		if (!in) /* SEGFAULT FIX */
+			return (0);
 		utxo = llist_find_node(all_unspent, find_unspent_output, in);
 		if (!utxo)
 			return (0);
@@ -63,6 +61,8 @@ int transaction_is_valid(transaction_t const *transaction,
 	for (i = 0; i < num_outputs; i++)
 	{
 		out = llist_get_node_at(transaction->outputs, i);
+		if (!out) /* SEGFAULT FIX */
+			return (0);
 		total_out += out->amount;
 	}
 

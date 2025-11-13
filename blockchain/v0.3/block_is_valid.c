@@ -1,11 +1,5 @@
 #include "blockchain.h"
 
-/**
- * check_genesis - Checks if a block is the genesis block
- * @block: The block to check
- *
- * Return: 0 if valid genesis, 1 otherwise
- */
 static int check_genesis(block_t const *block)
 {
 	uint8_t hash[SHA256_DIGEST_LENGTH] = {0};
@@ -13,7 +7,8 @@ static int check_genesis(block_t const *block)
 		0xc5, 0x2c, 0x26, 0xc8, 0xb5, 0x46, 0x16, 0x39,
 		0x63, 0x5d, 0x8e, 0xdf, 0x2a, 0x97, 0xd4, 0x8d,
 		0x0c, 0x8e, 0x00, 0x09, 0xc8, 0x17, 0xf2, 0xb1,
-		0xd3, 0xd7, 0xff, 0x2f, 0x04, 0x51, 0x58, 0x03};
+		0xd3, 0xd7, 0xff, 0x2f, 0x04, 0x51, 0x58, 0x03
+	};
 
 	if (block->info.index != 0 ||
 		block->info.difficulty != 0 ||
@@ -30,14 +25,6 @@ static int check_genesis(block_t const *block)
 	return (0);
 }
 
-/**
- * block_is_valid - checks whether a Block is valid
- * @block:       pointer to the Block to check
- * @prev_block:  pointer to the previous Block in the chain
- * @all_unspent: list of all unspent transaction outputs
- *
- * Return: 0 if valid, 1 otherwise
- */
 int block_is_valid(block_t const *block, block_t const *prev_block,
 				   llist_t *all_unspent)
 {
@@ -69,15 +56,18 @@ int block_is_valid(block_t const *block, block_t const *prev_block,
 		return (1);
 
 	tx = llist_get_node_at(block->transactions, 0);
+	if (!tx) /* SEGFAULT FIX */
+		return (1);
 	if (!coinbase_is_valid(tx, block->info.index))
 		return (1);
 
 	for (i = 1; i < num_tx; i++)
 	{
 		tx = llist_get_node_at(block->transactions, i);
+		if (!tx) /* SEGFAULT FIX */
+			return (1);
 		if (!transaction_is_valid(tx, all_unspent))
 			return (1);
 	}
 	return (0);
-
 }

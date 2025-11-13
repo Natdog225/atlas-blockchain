@@ -13,7 +13,7 @@ void blockchain_destroy(blockchain_t *blockchain)
 	 * Remove the genesis block's node (at index 0).
 	 * pass '1' to free the list node
 	 */
-	llist_remove_node(blockchain->chain, 0, 1);
+	llist_pop(blockchain->chain);
 
 	/*
 	 * destroy the rest of the list.

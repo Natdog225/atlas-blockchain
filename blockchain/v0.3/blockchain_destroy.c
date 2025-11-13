@@ -1,34 +1,14 @@
 #include "blockchain.h"
 
-/**
- * blockchain_destroy - destroys a Blockchain
- * @blockchain: pointer to the Blockchain to destroy
- */
 void blockchain_destroy(blockchain_t *blockchain)
 {
-	block_t *block;
-
 	if (!blockchain)
 		return;
 
-	/*
-	 * Pop the genesis block node.
-	 */
 	llist_pop(blockchain->chain);
 
-	/*
-	 * Pop the next block (the one allocated on the heap).
-	 */
-	block = llist_pop(blockchain->chain);
-	if (block)
-	{
-		block_destroy(block);
-	}
-
-	/* chain list is empty, destroy it */
-	llist_destroy(blockchain->chain, 0, NULL);
+	llist_destroy(blockchain->chain, 1, (void (*)(void *))block_destroy);
 	
-	/* Destroy the unspent list */
 	llist_destroy(blockchain->unspent, 1, free);
 
 	free(blockchain);

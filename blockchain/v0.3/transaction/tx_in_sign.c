@@ -1,6 +1,6 @@
 #include "blockchain.h"
 #include <string.h> /* For memcmp */
-#include <stdio.h>	/* For fprintf, stderr */
+#include <stdio.h>  /* For fprintf, stderr */
 
 /**
  * tx_in_sign - signs a transaction input, given the transaction id it is from
@@ -48,4 +48,19 @@ sig_t *tx_in_sign(
 
 	ec_to_pub(sender, pub_from_sender);
 
-	if (memcmp(pub_from_sender, target_unspent->
+	/* ope, accidentally deleted this */
+	if (memcmp(pub_from_sender, target_unspent->out.pub, EC_PUB_LEN) != 0)
+	{
+		fprintf(stderr, "memcmp failure at target_unspent\n");
+		return (NULL);
+	}
+
+	/* sign */
+	if (!ec_sign(sender, tx_id, SHA256_DIGEST_LENGTH, &in->sig))
+	{
+		fprintf(stderr, "ec_sign failure\n");
+		return (NULL);
+	}
+
+	return (&in->sig);
+}

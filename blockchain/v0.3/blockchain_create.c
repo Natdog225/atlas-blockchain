@@ -22,7 +22,6 @@ blockchain_t *blockchain_create(void)
 		free(blockchain);
 		return (NULL);
 	}
-
 	/* THIS IS THE VERSION THAT ALLOCATES GENESIS */
 	genesis_block = calloc(1, sizeof(*genesis_block));
 	if (!genesis_block)
@@ -31,7 +30,6 @@ blockchain_t *blockchain_create(void)
 		free(blockchain);
 		return (NULL);
 	}
-
 	genesis_block->info.index = 0;
 	genesis_block->info.difficulty = 0;
 	genesis_block->info.timestamp = 1537578000;
@@ -64,6 +62,5 @@ blockchain_t *blockchain_create(void)
 		free(blockchain);
 		return (NULL);
 	}
-
 	return (blockchain);
 }

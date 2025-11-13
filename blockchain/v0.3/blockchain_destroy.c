@@ -25,12 +25,11 @@ void blockchain_destroy(blockchain_t *blockchain)
 		block_destroy(block);
 	}
 
-	/* Now that the chain list is empty, destroy it */
+	/* chain list is empty, destroy it */
 	llist_destroy(blockchain->chain, 0, NULL);
 	
 	/* Destroy the unspent list */
 	llist_destroy(blockchain->unspent, 1, free);
 
-	/* Finally, free the blockchain struct itself */
 	free(blockchain);
 }

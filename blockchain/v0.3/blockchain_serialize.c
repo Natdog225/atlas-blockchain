@@ -1,46 +1,134 @@
 #include "blockchain.h"
-#include "provided/endianness.h"
-#include <llist.h>
+#include "endianness.h" /* For _get_endianness, swap_endian */
 #include <stdio.h>
 #include <string.h>
 
 /**
- * blockchain_serialize - Serializes a blockchain to a file.
- * @blockchain: A pointer to the blockchain to serialize.
- * @path:       The path to the file to save the blockchain to.
+ * _write_file_header - Writes the file header
+ */
+static int _write_file_header(blockchain_t const *blockchain, FILE *f,
+							  uint8_t endianness)
+{
+	uint32_t nb_blocks = llist_size(blockchain->chain);
+	uint32_t nb_unspent = llist_size(blockchain->unspent);
+
+	fwrite(HBLK_MAGIC, 4, 1, f);
+	fwrite(HBLK_VERSION, 3, 1, f);
+	fwrite(&endianness, 1, 1, f);
+	fwrite(&nb_blocks, 4, 1, f);
+	fwrite(&nb_unspent, 4, 1, f);
+	return (0);
+}
+
+/**
+ * _serialize_tx_in - Helper to write a tx_in
+ */
+static int _serialize_tx_in(llist_node_t node, unsigned int idx, void *arg)
+{
+	tx_in_t *in = (tx_in_t *)node;
+	FILE *f = (FILE *)arg;
+	(void)idx;
+
+	fwrite(in, 1, 169, f); /* tx_in_t is 169 bytes */
+	return (0);
+}
+
+/**
+ * _serialize_tx_out - Helper to write a tx_out
+ */
+static int _serialize_tx_out(llist_node_t node, unsigned int idx, void *arg)
+{
+	tx_out_t *out = (tx_out_t *)node;
+	FILE *f = (FILE *)arg;
+	(void)idx;
+
+	fwrite(out, 1, 101, f); /* tx_out_t is 101 bytes */
+	return (0);
+}
+
+/**
+ * _serialize_tx - Helper to write a transaction
+ */
+static int _serialize_tx(llist_node_t node, unsigned int idx, void *arg)
+{
+	transaction_t *tx = (transaction_t *)node;
+	FILE *f = (FILE *)arg;
+	uint32_t nb_inputs = llist_size(tx->inputs);
+	uint32_t nb_outputs = llist_size(tx->outputs);
+	(void)idx;
+
+	fwrite(tx->id, 32, 1, f);
+	fwrite(&nb_inputs, 4, 1, f);
+	fwrite(&nb_outputs, 4, 1, f);
+
+	llist_for_each(tx->inputs, _serialize_tx_in, f);
+	llist_for_each(tx->outputs, _serialize_tx_out, f);
+	return (0);
+}
+
+/**
+ * _serialize_block - Helper to write a block
+ */
+static int _serialize_block(llist_node_t node, unsigned int idx, void *arg)
+{
+	block_t *block = (block_t *)node;
+	FILE *f = (FILE *)arg;
+	uint32_t nb_transactions = -1;
+	(void)idx;
+
+	fwrite(&block->info, sizeof(block->info), 1, f);
+	fwrite(&block->data.len, 4, 1, f);
+	fwrite(block->data.buffer, block->data.len, 1, f);
+	fwrite(block->hash, 32, 1, f);
+
+	if (block->transactions)
+		nb_transactions = llist_size(block->transactions);
+
+	fwrite(&nb_transactions, 4, 1, f);
+	if (block->transactions)
+		llist_for_each(block->transactions, _serialize_tx, f);
+
+	return (0);
+}
+
+/**
+ * _serialize_unspent - Helper to write an unspent tx output
+ */
+static int _serialize_unspent(llist_node_t node, unsigned int idx, void *arg)
+{
+	unspent_tx_out_t *utxo = (unspent_tx_out_t *)node;
+	FILE *f = (FILE *)arg;
+	(void)idx;
+
+	fwrite(utxo, 1, 165, f); /* unspent_tx_out_t is 165 bytes */
+	return (0);
+}
+
+/**
+ * blockchain_serialize - serializes a Blockchain to a file
+ * @blockchain: pointer to the Blockchain to be serialized
+ * @path:       path to a file to serialize the Blockchain into
  *
- * Return: 0 on success, -1 on failure.
+ * Return: 0 upon success, or -1 upon failure
  */
 int blockchain_serialize(blockchain_t const *blockchain, char const *path)
 {
 	FILE *f;
-	uint32_t num_blocks, i;
-	const char magic[] = "HBLK";
-	const char version[] = "0.1";
+	uint8_t endianness;
 
 	if (!blockchain || !path)
 		return (-1);
 
-	f = fopen(path, "wb");
+	f = fopen(path, "w");
 	if (!f)
 		return (-1);
 
-	num_blocks = llist_size(blockchain->chain);
+	endianness = _get_endianness();
+	_write_file_header(blockchain, f, endianness);
 
-	fwrite(magic, 1, 4, f);
-	fwrite(version, 1, 3, f);
-	fwrite((uint8_t[]){_get_endianness()}, 1, 1, f);
-	fwrite(&num_blocks, sizeof(num_blocks), 1, f);
+	llist_for_each(blockchain->chain, _serialize_block, f);
+	llist_for_each(blockchain->unspent, _serialize_unspent, f);
 
-	for (i = 0; i < num_blocks; ++i)
-	{
-		block_t *block = llist_get_node_at(blockchain->chain, i);
-
-		fwrite(&(block->info), sizeof(block->info), 1, f);
-		fwrite(&(block->data.len), sizeof(block->data.len), 1, f);
-		fwrite(block->data.buffer, block->data.len, 1, f);
-		fwrite(block->hash, sizeof(block->hash), 1, f);
-	}
 	fclose(f);
 	return (0);
 }

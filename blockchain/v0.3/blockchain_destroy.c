@@ -6,21 +6,24 @@
  */
 void blockchain_destroy(blockchain_t *blockchain)
 {
+	block_t *block;
+
 	if (!blockchain)
 		return;
 
-	/*
-	 * Remove the genesis block's node (at index 0).
-	 * pass '1' to free the list node
-	 */
+	while (llist_size(blockchain->chain) > 1)
+	{
+		block = llist_get_node_at(blockchain->chain,
+			llist_size(blockchain->chain) - 1);
+		
+		llist_remove_node(blockchain->chain, llist_size(blockchain->chain) - 1, 0);
+
+		block_destroy(block);
+	}
+
 	llist_pop(blockchain->chain);
 
-	/*
-	 * destroy the rest of the list.
-	 */
-	llist_destroy(blockchain->chain, 1, (void (*)(void *))block_destroy);
-
-	/* Destroy the unspent list (which is empty or full of heap items) */
+	llist_destroy(blockchain->chain, 0, NULL);
 	llist_destroy(blockchain->unspent, 1, free);
 
 	free(blockchain);

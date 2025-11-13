@@ -3,10 +3,6 @@
 
 /**
  * find_unspent_output - Finds an unspent output matching a transaction input
- * @node: Pointer to the unspent_tx_out_t node
- * @in:   Pointer to the tx_in_t to match
- *
- * Return: 0 if match, 1 otherwise
  */
 static int find_unspent_output(llist_node_t node, void *in)
 {
@@ -51,8 +47,7 @@ int transaction_is_valid(transaction_t const *transaction,
 	num_inputs = llist_size(transaction->inputs);
 	num_outputs = llist_size(transaction->outputs);
 
-	/* A valid (non-coinbase) transaction must have inputs */
-	if (num_inputs == 0)
+	if (num_inputs == 0) /* Regular tx must have inputs */
 		return (0);
 
 	for (i = 0; i < num_inputs; i++)

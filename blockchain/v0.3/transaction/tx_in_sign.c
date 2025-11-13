@@ -13,15 +13,8 @@ static int find_unspent_output(llist_node_t node, void *in)
 	unspent_tx_out_t *utxo = node;
 	tx_in_t *tx_in = in;
 
-	/*
-	 * A UTXO is uniquely identified by the 3-tuple of:
-	 * 1. The block it was in (block_hash)
-	 * 2. The transaction it was in (tx_id)
-	 * 3. Its own hash (tx_out_hash)
-	 */
-	if (memcmp(utxo->block_hash, tx_in->block_hash, SHA256_DIGEST_LENGTH) == 0 &&
-		memcmp(utxo->tx_id, tx_in->tx_id, SHA256_DIGEST_LENGTH) == 0 &&
-		memcmp(utxo->out.hash, tx_in->tx_out_hash, SHA256_DIGEST_LENGTH) == 0)
+	/* A UTXO is uniquely identified by the hash of the output */
+	if (memcmp(utxo->out.hash, tx_in->tx_out_hash, SHA256_DIGEST_LENGTH) == 0)
 	{
 		return (0); /* Match found */
 	}
@@ -56,8 +49,6 @@ sig_t *tx_in_sign(tx_in_t *in, uint8_t const tx_id[SHA256_DIGEST_LENGTH],
 	if (!ec_to_pub(sender, sender_pub))
 		return (NULL);
 
-	/* Check if the public key of the sender is the same as the */
-	/* public key stored in the UTXO they are trying to spend. */
 	if (memcmp(utxo->out.pub, sender_pub, EC_PUB_LEN) != 0)
 		return (NULL);
 

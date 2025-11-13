@@ -8,6 +8,7 @@ int coinbase_is_valid(transaction_t const *coinbase, uint32_t block_index)
 	tx_in_t *in;
 	tx_out_t *out;
 
+	/* SEGFAULT FIX: Check for NULL pointers before use */
 	if (!coinbase || !coinbase->inputs || !coinbase->outputs)
 		return (0);
 

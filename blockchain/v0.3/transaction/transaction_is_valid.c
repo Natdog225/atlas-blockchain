@@ -26,6 +26,7 @@ int transaction_is_valid(transaction_t const *transaction,
 	unspent_tx_out_t *utxo;
 	EC_KEY *temp_key;
 
+	/* SEGFAULT FIX: Check for NULL pointers before use */
 	if (!transaction || !all_unspent || !transaction->inputs || !transaction->outputs)
 		return (0);
 
@@ -44,9 +45,11 @@ int transaction_is_valid(transaction_t const *transaction,
 		in = llist_get_node_at(transaction->inputs, i);
 		if (!in) /* SEGFAULT FIX */
 			return (0);
+		
 		utxo = llist_find_node(all_unspent, find_unspent_output, in);
 		if (!utxo)
 			return (0);
+		
 		temp_key = ec_from_pub(utxo->out.pub);
 		if (!temp_key ||
 			!ec_verify(temp_key, transaction->id, SHA256_DIGEST_LENGTH, &in->sig))

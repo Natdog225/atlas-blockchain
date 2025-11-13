@@ -34,8 +34,8 @@ uint8_t *block_hash(block_t const *block,
 		}
 	}
 
-	len_to_hash = sizeof(block->info) + sizeof(block->data.len) +
-				  block->data.len + tx_hashes_len;
+	/* Hash = block_info + block_data + tx_hashes */
+	len_to_hash = sizeof(block->info) + block->data.len + tx_hashes_len;
 
 	ptr = malloc(len_to_hash);
 	if (!ptr)
@@ -44,16 +44,15 @@ uint8_t *block_hash(block_t const *block,
 		return (NULL);
 	}
 
+	/* Copy data into the buffer */
 	memcpy(ptr, &block->info, sizeof(block->info));
-	memcpy(ptr + sizeof(block->info), &block->data.len, sizeof(block->data.len));
-	memcpy(ptr + sizeof(block->info) + sizeof(block->data.len),
-		   block->data.buffer, block->data.len);
+	memcpy(ptr + sizeof(block->info), block->data.buffer, block->data.len);
 
 	if (tx_hashes_buf)
-		memcpy(ptr + sizeof(block->info) + sizeof(block->data.len) +
-				   block->data.len,
+		memcpy(ptr + sizeof(block->info) + block->data.len,
 			   tx_hashes_buf, tx_hashes_len);
 
+	/* Hash the buffer */
 	sha256((int8_t const *)ptr, len_to_hash, hash_buf);
 
 	free(ptr);

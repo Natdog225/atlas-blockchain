@@ -25,9 +25,9 @@ static int _read_header(FILE *f, uint8_t *endianness,
 
 	if (*endianness != _get_endianness())
 	{
-		/* Use _swap_endian */
-		_swap_endian(nb_blocks, sizeof(*nb_blocks));
-		_swap_endian(nb_unspent, sizeof(*nb_unspent));
+		/* Cast pointers to (char *) */
+		_swap_endian((char *)nb_blocks, sizeof(*nb_blocks));
+		_swap_endian((char *)nb_unspent, sizeof(*nb_unspent));
 	}
 	return (0);
 }
@@ -37,7 +37,6 @@ static int _read_header(FILE *f, uint8_t *endianness,
  */
 static transaction_t *_deserialize_tx(FILE *f, uint8_t swap)
 {
-	/* Use sizeof(*tx) */
 	transaction_t *tx = calloc(1, sizeof(*tx));
 	tx_in_t *in;
 	tx_out_t *out;
@@ -53,8 +52,9 @@ static transaction_t *_deserialize_tx(FILE *f, uint8_t swap)
 	fread(&nb_outputs, 4, 1, f);
 	if (swap)
 	{
-		_swap_endian(&nb_inputs, 4);
-		_swap_endian(&nb_outputs, 4);
+		/* CORRECTED: Cast pointers to (char *) */
+		_swap_endian((char *)&nb_inputs, 4);
+		_swap_endian((char *)&nb_outputs, 4);
 	}
 	for (i = 0; i < nb_inputs; i++)
 	{
@@ -67,7 +67,8 @@ static transaction_t *_deserialize_tx(FILE *f, uint8_t swap)
 		out = calloc(1, sizeof(*out));
 		fread(out, sizeof(*out), 1, f);
 		if (swap)
-			_swap_endian(&out->amount, 4);
+			/* Cast pointer to (char *) */
+			_swap_endian((char *)&out->amount, 4);
 		llist_add_node(tx->outputs, out, ADD_NODE_REAR);
 	}
 	return (tx);
@@ -78,7 +79,6 @@ static transaction_t *_deserialize_tx(FILE *f, uint8_t swap)
  */
 static block_t *_deserialize_block(FILE *f, uint8_t swap)
 {
-	/* Use sizeof(*block) */
 	block_t *block = calloc(1, sizeof(*block));
 	uint32_t i, nb_transactions;
 
@@ -93,12 +93,13 @@ static block_t *_deserialize_block(FILE *f, uint8_t swap)
 
 	if (swap)
 	{
-		_swap_endian(&block->info.index, 4);
-		_swap_endian(&block->info.difficulty, 4);
-		_swap_endian(&block->info.timestamp, 8);
-		_swap_endian(&block->info.nonce, 8);
-		_swap_endian(&block->data.len, 4);
-		_swap_endian(&nb_transactions, 4);
+		/*Cast all pointers to (char *) */
+		_swap_endian((char *)&block->info.index, 4);
+		_swap_endian((char *)&block->info.difficulty, 4);
+		_swap_endian((char *)&block->info.timestamp, 8);
+		_swap_endian((char *)&block->info.nonce, 8);
+		_swap_endian((char *)&block->data.len, 4);
+		_swap_endian((char *)&nb_transactions, 4);
 	}
 
 	if (nb_transactions != (uint32_t)-1)
@@ -154,7 +155,8 @@ blockchain_t *blockchain_deserialize(char const *path)
 		utxo = calloc(1, sizeof(*utxo));
 		fread(utxo, sizeof(*utxo), 1, f);
 		if (swap)
-			_swap_endian(&utxo->out.amount, 4);
+			/* Cast pointer to (char *) */
+			_swap_endian((char *)&utxo->out.amount, 4);
 		llist_add_node(blockchain->unspent, utxo, ADD_NODE_REAR);
 	}
 	fclose(f);

@@ -1,54 +1,27 @@
 #include "blockchain.h"
-#include "endianness.h" /* For _get_endianness, swap_endian */
+#include "endianness.h"
 #include <stdio.h>
 #include <string.h>
 
-/**
- * _write_file_header - Writes the file header
- */
-static int _write_file_header(blockchain_t const *blockchain, FILE *f,
-							  uint8_t endianness)
-{
-	uint32_t nb_blocks = llist_size(blockchain->chain);
-	uint32_t nb_unspent = llist_size(blockchain->unspent);
-
-	fwrite(HBLK_MAGIC, 4, 1, f);
-	fwrite(HBLK_VERSION, 3, 1, f);
-	fwrite(&endianness, 1, 1, f);
-	fwrite(&nb_blocks, 4, 1, f);
-	fwrite(&nb_unspent, 4, 1, f);
-	return (0);
-}
-
-/**
- * _serialize_tx_in - Helper to write a tx_in
- */
+/* Helper to write a tx_in */
 static int _serialize_tx_in(llist_node_t node, unsigned int idx, void *arg)
 {
-	tx_in_t *in = (tx_in_t *)node;
-	FILE *f = (FILE *)arg;
 	(void)idx;
-
-	fwrite(in, 1, 169, f); /* tx_in_t is 169 bytes */
+	/* Use hardcoded size from prompt */
+	fwrite(node, 1, 169, (FILE *)arg);
 	return (0);
 }
 
-/**
- * _serialize_tx_out - Helper to write a tx_out
- */
+/* Helper to write a tx_out */
 static int _serialize_tx_out(llist_node_t node, unsigned int idx, void *arg)
 {
-	tx_out_t *out = (tx_out_t *)node;
-	FILE *f = (FILE *)arg;
 	(void)idx;
-
-	fwrite(out, 1, 101, f); /* tx_out_t is 101 bytes */
+	/* Use hardcoded size from prompt */
+	fwrite(node, 1, 101, (FILE *)arg);
 	return (0);
 }
 
-/**
- * _serialize_tx - Helper to write a transaction
- */
+/* Helper to write a transaction */
 static int _serialize_tx(llist_node_t node, unsigned int idx, void *arg)
 {
 	transaction_t *tx = (transaction_t *)node;
@@ -66,9 +39,7 @@ static int _serialize_tx(llist_node_t node, unsigned int idx, void *arg)
 	return (0);
 }
 
-/**
- * _serialize_block - Helper to write a block
- */
+/* Helper to write a block */
 static int _serialize_block(llist_node_t node, unsigned int idx, void *arg)
 {
 	block_t *block = (block_t *)node;
@@ -91,40 +62,36 @@ static int _serialize_block(llist_node_t node, unsigned int idx, void *arg)
 	return (0);
 }
 
-/**
- * _serialize_unspent - Helper to write an unspent tx output
- */
+/* Helper to write an unspent tx output */
 static int _serialize_unspent(llist_node_t node, unsigned int idx, void *arg)
 {
-	unspent_tx_out_t *utxo = (unspent_tx_out_t *)node;
-	FILE *f = (FILE *)arg;
 	(void)idx;
-
-	fwrite(utxo, 1, 165, f); /* unspent_tx_out_t is 165 bytes */
+	/* CORRECTED: Use hardcoded size from prompt */
+	fwrite(node, 1, 165, (FILE *)arg);
 	return (0);
 }
 
-/**
- * blockchain_serialize - serializes a Blockchain to a file
- * @blockchain: pointer to the Blockchain to be serialized
- * @path:       path to a file to serialize the Blockchain into
- *
- * Return: 0 upon success, or -1 upon failure
- */
 int blockchain_serialize(blockchain_t const *blockchain, char const *path)
 {
 	FILE *f;
 	uint8_t endianness;
+	uint32_t nb_blocks, nb_unspent;
 
 	if (!blockchain || !path)
 		return (-1);
-
 	f = fopen(path, "w");
 	if (!f)
 		return (-1);
 
 	endianness = _get_endianness();
-	_write_file_header(blockchain, f, endianness);
+	nb_blocks = llist_size(blockchain->chain);
+	nb_unspent = llist_size(blockchain->unspent);
+
+	fwrite(HBLK_MAGIC, 4, 1, f);
+	fwrite(HBLK_VERSION, 3, 1, f);
+	fwrite(&endianness, 1, 1, f);
+	fwrite(&nb_blocks, 4, 1, f);
+	fwrite(&nb_unspent, 4, 1, f);
 
 	llist_for_each(blockchain->chain, _serialize_block, f);
 	llist_for_each(blockchain->unspent, _serialize_unspent, f);

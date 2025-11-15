@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -Werror -pedantic -I. -I./transaction -I../../crypto
+CFLAGS = -Wall -Wextra -Werror -pedantic -I. -I./transaction -I../../crypto -I./provided
 LDFLAGS = -L../../crypto -lhblk_crypto -lllist -lssl -lcrypto -pthread
 CC = gcc
 
